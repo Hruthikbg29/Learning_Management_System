@@ -10,4 +10,7 @@ public interface UserRepository extends JpaRepository<User, Long>  {
 	// Spring Security will call this to find user by email during login
     Optional<User> findByEmail(String email);
     boolean existsByEmail(String email);
+    
+    Optional<User> findByUsername(String username);
+    boolean existsByUsername(String username);
 }
