@@ -1,6 +1,6 @@
 package com.LMS_Project.security.service;
 
-
+import com.LMS_Project.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -8,42 +8,40 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import com.LMS_Project.Entity.User;
-import com.LMS_Project.repository.UserRepository;
-
 import java.util.Collections;
-
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-	 private static final Logger logger =
-	            LoggerFactory.getLogger(CustomUserDetailsService.class);
 
-	    private final UserRepository userRepository;
+    private static final Logger logger =
+            LoggerFactory.getLogger(CustomUserDetailsService.class);
 
-	    public CustomUserDetailsService(UserRepository userRepository) {
-	        this.userRepository = userRepository;
-	    }
-	    
-	    @Override
-	    public UserDetails loadUserByUsername(String username)
-	            throws UsernameNotFoundException {
-	        logger.info("Loading user by username: {}", username);
+    private final UserRepository userRepository;
 
-	        User user = userRepository.findByUsername(username)
-	                .orElseThrow(() -> {
-	                    logger.error("User not found: {}", username);
-	                    return new UsernameNotFoundException(
-	                            "User not found: " + username);
-	                });
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-	        return new org.springframework.security.core.userdetails.User(
-	                user.getUsername(),
-	                user.getPassword(),
-	                Collections.singletonList(
-	                        new SimpleGrantedAuthority(user.getRole().name())
-	                )
-	        );
-	    }
+    @Override
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
+        logger.info("Loading user by username: {}", username);
+
+        // ── Use fully qualified name to avoid Spring Security User clash ──
+        com.LMS_Project.Entity.User user =
+                userRepository.findByUsername(username)
+                        .orElseThrow(() -> {
+                            logger.error("User not found: {}", username);
+                            return new UsernameNotFoundException(
+                                    "User not found: " + username);
+                        });
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                Collections.singletonList(
+                        new SimpleGrantedAuthority(user.getRole().name())
+                )
+        );
+    }
 }
